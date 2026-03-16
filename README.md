@@ -32,5 +32,13 @@ A modding framework for [Coromon](https://www.coromon.com/)!
 ## Installation
 **Crimsonite** is currently *very* early in development. This repository is purely public for those tech-savvy and interested, as a way to monitor the progress I'm making. For the moment, everything is still very much in early testing stages, including the way the framework is installed and mods are handled.
 
+### Building
+For those who still want to check the project out and want to build it themselves, here's how to currently build it.
+
+1. Download the source (either a `.zip` or `git clone` works fine)
+2. From the root directory, run ``cmake -B build && cmake --build build --config Release`
+3. Grab `build/launcher/Release/game_launcher.exe` and copy it to your game's installation directory
+4. Run the launcher
+
 ## Mod Creation
 *To be written.*
