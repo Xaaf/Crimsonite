@@ -36,9 +36,9 @@ A modding framework for [Coromon](https://www.coromon.com/)!
 For those who still want to check the project out and want to build it themselves, here's how to currently build it.
 
 1. Download the source (either a `.zip` or `git clone` works fine)
-2. From the root directory, run ``cmake -B build && cmake --build build --config Release`
-3. Grab `build/launcher/Release/game_launcher.exe` and copy it to your game's installation directory
-4. Run the launcher
+2. From the root directory, run `cmake -B build -A Win32 && cmake --build build --config Release`
+3. Grab `build/launcher/Release/crimsonite.exe` and `build/modloader/Release/crimsonite.dll`, and copy it to your game's installation directory
+4. Run the launcher (`crimsonite.exe`), which will launch the game with mods!
 
 ## Mod Creation
 *To be written.*

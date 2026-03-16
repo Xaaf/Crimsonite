@@ -1,13 +1,18 @@
 #include <windows.h>
+#include <iostream>
 
-BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved) {
-    switch (ul_reason_for_call) {
-        case DLL_PROCESS_ATTACH:
-            break;
-        case DLL_THREAD_ATTACH:
-        case DLL_THREAD_DETACH:
-        case DLL_PROCESS_DETACH:
-            break;
+DWORD WINAPI MainThread(LPVOID param) {
+    AllocConsole();
+    freopen("CONOUT$", "w", stdout);
+
+    std::cout << "Crimsonite modloader loaded successfully!" << std::endl;
+
+    return 0;
+}
+
+BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID reserved) {
+    if (reason == DLL_PROCESS_ATTACH) {
+        CreateThread(nullptr, 0, MainThread, hModule, 0, nullptr);
     }
 
     return TRUE;
