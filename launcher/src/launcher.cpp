@@ -3,9 +3,10 @@
 #endif
 #include <iostream>
 
+#include "log.h"
+
 int main() {
-    // TODO: Consider logging more properly, as opposed to calling `std::cout` manually each time
-    std::cout << "Crimsonite starting..." << std::endl;
+    LOG_INFO("Crimsonite starting...");
 
 #if defined(_WIN32) || defined(_WIN64)
     STARTUPINFOA gameStartupInfo{};
@@ -30,17 +31,17 @@ int main() {
     );
 
     if (!success) {
-        std::cerr << "Failed to launch the game. Error code: " << GetLastError() << std::endl;
+        LOG_ERROR("Failed to launch the game. Error code: {}", GetLastError());
         return 1;
     }
 
-    std::cout << "Game launched successfully in suspension!" << std::endl;
+    LOG_INFO("Game launched successfully in suspension!");
 
     char dllPath[MAX_PATH];
     GetFullPathNameA("crimsonite.dll", MAX_PATH, dllPath, NULL);
     size_t pathSize = strlen(dllPath) + 1;
 
-    std::cout << ">> Full path to DLL: " << dllPath << std::endl;
+    LOG_INFO(">> Full path to DLL: {}", dllPath);
 
     // https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-virtualallocex
     LPVOID remoteMemory = VirtualAllocEx(
@@ -52,7 +53,7 @@ int main() {
     );
 
     if (!remoteMemory) {
-        std::cerr << "Failed to allocate memory in the target process. Error code: " << GetLastError() << std::endl;
+        LOG_ERROR("Failed to allocate memory in the target process. Error code: {}", GetLastError());
         TerminateProcess(gameProcessInfo.hProcess, 1);
         return 1;
     }
@@ -67,7 +68,7 @@ int main() {
         &bytesWritten               // number of bytes written
     );
 
-    std::cout << "DLL path written to target process memory! (wrote " << bytesWritten << " bytes)" << std::endl;
+    LOG_INFO("DLL path written to target process memory! (wrote {} bytes)", bytesWritten);
 
     HMODULE kernel32Module = GetModuleHandleA("kernel32.dll");
     LPVOID loadLibraryAddress = GetProcAddress(kernel32Module, "LoadLibraryA");
@@ -91,12 +92,12 @@ int main() {
     GetExitCodeThread(remoteThread, &exitCode);
 
     if (exitCode == 0) {
-        std::cerr << "Failed to inject the DLL. LoadLibraryA returned NULL." << std::endl;
+        LOG_ERROR("Failed to inject the DLL. LoadLibraryA returned NULL.");
         TerminateProcess(gameProcessInfo.hProcess, 1);
         return 1;
     }
 
-    std::cout << "DLL injected successfully! (Module handle: " << exitCode << ")" << std::endl;
+    LOG_INFO("DLL injected successfully! (Module handle: {})", exitCode);
     CloseHandle(remoteThread); // No longer in use, so close the handle
 
     ResumeThread(gameProcessInfo.hThread);
@@ -106,7 +107,7 @@ int main() {
 
     return 0;
 #else
-    std::cerr << "Currently, Crimsonite is only supported on Windows." << std::endl;
+    LOG_ERROR("Currently, Crimsonite is only supported on Windows.");
     return 1;
 #endif
 }
