@@ -1,8 +1,9 @@
 add_library(game_modloader SHARED
-    src/modloader.cpp
     src/console.cpp
     src/hook_manager.cpp
     src/lua_utils.cpp
+    src/main.cpp
+    src/modloader.cpp
 )
 
 target_link_libraries(game_modloader PRIVATE
