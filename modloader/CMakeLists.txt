@@ -1,9 +1,17 @@
 add_library(game_modloader SHARED
     src/modloader.cpp
+    src/console.cpp
+    src/hook_manager.cpp
+    src/lua_utils.cpp
 )
 
 target_link_libraries(game_modloader PRIVATE
     minhook # Link against MinHook
+    common_headers
+)
+
+target_compile_definitions(game_modloader PRIVATE
+    CURRENT_LOG_LEVEL=LOG_LEVEL_DEBUG
 )
 
 target_include_directories(game_modloader PRIVATE

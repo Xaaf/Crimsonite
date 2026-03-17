@@ -9,6 +9,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Add submodules
 add_subdirectory(external/minhook)
 
+# Add shared utilities
+add_subdirectory(common)
+
 # Add our own modules
 add_subdirectory(launcher)
 add_subdirectory(modloader)

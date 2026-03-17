@@ -2,6 +2,10 @@ add_executable(game_launcher
     src/launcher.cpp
 )
 
+target_link_libraries(game_launcher PRIVATE
+    common_headers
+)
+
 target_include_directories(game_launcher PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
