@@ -16,14 +16,13 @@ A modding framework for [Coromon](https://www.coromon.com/)!
 | Platform        | Supported? |
 | --------------- | ---------- |
 | Windows (Steam) | Yes        |
-| Windows (Epic)  | Yes*       |
-| Windows (GOG)   | Yes*       |
+| Windows (Other) | Yes*       |
 | MacOS (Steam)   | No         |
-| MacOS (Epic)    | No         |
-| MacOS (GOG)     | No         |
+| MacOS (Other)   | No         |
 | Linux (Steam)   | No         |
-| Linux (Epic)    | No         |
-| Linux (GOG)     | No         |
+| Linux (Other)   | No         |
+| Android         | No         |
+| iOS             | No         |
 
 </div>
 
