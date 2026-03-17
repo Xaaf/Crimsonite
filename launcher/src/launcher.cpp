@@ -1,14 +1,39 @@
 #if defined(_WIN32) || defined(_WIN64)
 #include <windows.h>
 #endif
+#include <filesystem>
 #include <iostream>
 
 #include "log.h"
+
+bool ensure_folder_exists(const char* folderName) {
+    try {
+        if (!std::filesystem::exists(folderName)) {
+            std::filesystem::create_directory(folderName);
+            LOG_INFO("Created '{}' folder!", folderName);
+            
+            return true;
+        } else {
+            LOG_INFO("'{}' folder already exists.", folderName);
+            return true;
+        }
+    } catch (const std::filesystem::filesystem_error& ex) {
+        LOG_ERROR("Error occurred while checking/modifying '{}' folder: {}", folderName, ex.what());
+        return false;
+    }
+
+    return true;
+}
 
 int main() {
     LOG_INFO("Crimsonite starting...");
 
 #if defined(_WIN32) || defined(_WIN64)
+    if (!ensure_folder_exists("mods")) { 
+        LOG_ERROR("Failed to ensure 'mods' folder exists. Exiting...");
+        return 1;
+    }
+
     STARTUPINFOA gameStartupInfo{};
     PROCESS_INFORMATION gameProcessInfo{};
 
