@@ -1,21 +1,63 @@
+#include <cstring>
 #include <windows.h>
 #include <iostream>
 
 #include "MinHook.h"
 #include "log.h"
 
+void run_lua(void* luaState, const char* code);
+
 #pragma region Function Hooks
 typedef int(__cdecl* luaL_loadbuffer_t)(void* luaState, const char* buff, size_t size, const char* name);
-luaL_loadbuffer_t originalFunc = nullptr;
+typedef int(__cdecl* lua_pcall_t)(void* luaState, int nargs, int nresults, int errfunc);
+
+luaL_loadbuffer_t originalLoadbuffer = nullptr;
+lua_pcall_t originalPcall = nullptr;
 
 int __cdecl hookedLoadBuffer(void* luaState, const char* buff, size_t size, const char* name) {
     if (name) {
         LOG_TRACE("luaL_loadbuffer called with chunk name: {}", name);
     }
 
-    return originalFunc(luaState, buff, size, name);
+    static bool injected = false;
+    if (!injected) {
+        injected = true;
+
+        LOG_INFO("Injecting Crismonite into the Lua environment!");
+        run_lua(luaState, "print('Hello from Crimsonite!')");
+    }
+
+    return originalLoadbuffer(luaState, buff, size, name);
 }
 #pragma endregion
+
+void run_lua(void* luaState, const char* code) {
+    if (!originalLoadbuffer) {
+        LOG_ERROR("luaL_loadbuffer function pointer is null!");
+        return;
+    }
+    
+    if (!originalPcall) {
+        LOG_ERROR("lua_pcall function pointer is null!");
+        return;
+    }
+
+    // Load the Lua code as a chunk
+    int loadStatus = originalLoadbuffer(luaState, code, strlen(code), "crimsonite_injected_chunk");
+    if (loadStatus != 0) {
+        LOG_ERROR("Failed to load Lua code. Status: {}", loadStatus);
+        return;
+    }
+
+    // Call the loaded chunk
+    int pcallStatus = originalPcall(luaState, 0, 0, 0);
+    if (pcallStatus != 0) {
+        LOG_ERROR("Failed to execute Lua code. Status: {}", pcallStatus);
+        return;
+    }
+
+    LOG_INFO("Lua code executed successfully!");
+}
 
 #pragma region DLL Thread
 /**
@@ -76,8 +118,15 @@ DWORD WINAPI MainThread(LPVOID param) {
         return 1;
     }
 
+    void* pcallAddr = GetProcAddress(luaModule, "lua_pcall");
+    if (!pcallAddr) {
+        LOG_ERROR("Failed to get address for lua_pcall.");
+        return 1;
+    }
+    originalPcall = reinterpret_cast<lua_pcall_t>(pcallAddr);
+
     // Set up the hook
-    if (MH_CreateHook(loadbufferAddr, &hookedLoadBuffer, reinterpret_cast<LPVOID*>(&originalFunc)) != MH_OK) {
+    if (MH_CreateHook(loadbufferAddr, &hookedLoadBuffer, reinterpret_cast<LPVOID*>(&originalLoadbuffer)) != MH_OK) {
         LOG_ERROR("Failed to create hook for luaL_loadbuffer.");
         return 1;
     }
