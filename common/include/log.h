@@ -22,7 +22,7 @@ enum LogLevel {
 };
 
 #ifndef CURRENT_LOG_LEVEL
-#    define CURRENT_LOG_LEVEL LOG_LEVEL_INFO
+#    define CURRENT_LOG_LEVEL LOG_LEVEL_DEBUG
 #endif
 
 #pragma region Implementation Helpers

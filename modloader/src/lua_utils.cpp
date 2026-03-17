@@ -30,6 +30,27 @@ void run_lua(void* luaState, const char* code) {
     LOG_INFO("Lua code executed successfully!");
 }
 
+void run_lua_file(void* luaState, const char* filePath) {
+    // TODO: might be a good idea to add some form of sandboxing?
+    // TODO: this implementation is quite barebones, chunking might be a good idea for larger files
+
+    FILE* file = fopen(filePath, "r");
+    if (!file) {
+        LOG_ERROR("Failed to open Lua file: {}", filePath);
+        return;
+    }
+
+    fseek(file, 0, SEEK_END);
+    long fileSize = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    std::string buffer(fileSize, '\0');
+    fread(buffer.data(), 1, fileSize, file);
+    fclose(file);
+
+    run_lua(luaState, buffer.c_str());
+}
+
 void inject_lua(void* luaState) {
     static bool injected = false;
     if (injected) {

@@ -6,6 +6,11 @@
 void run_lua(void* luaState, const char* code);
 
 /**
+ * Run a Lua file in the given `luaState`.
+ */
+void run_lua_file(void* luaState, const char* filePath);
+
+/**
  * Called when we want to inject/execute our initial modloader script.
  * This is currently run once per `luaL_loadbuffer` call.
  */
