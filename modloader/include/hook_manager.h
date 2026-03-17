@@ -8,6 +8,9 @@ using lua_pcall_t = int(__cdecl*)(void* luaState, int nargs, int nresults, int e
 extern luaL_loadbuffer_t g_originalLoadbuffer;
 extern lua_pcall_t g_originalPcall;
 
+static bool modsLoaded = false;
+static bool shouldLoadMods = false;
+
 /**
  * Initialise the hook system, returning true on success.
  */

@@ -1,7 +1,6 @@
 #include "console.h"
 #include "hook_manager.h"
 #include "log.h"
-#include "modloader.h"
 
 #include <windows.h>
 #include <string>
@@ -16,7 +15,7 @@ DWORD WINAPI MainThread(LPVOID param) {
         return 1;
     }
 
-    auto modFiles = list_mod_folders("mods");
+    shutdown_hook_manager();
 
     return 0;
 }

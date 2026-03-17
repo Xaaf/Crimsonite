@@ -26,8 +26,6 @@ void run_lua(void* luaState, const char* code) {
         LOG_ERROR("Failed to execute Lua code. Status: {}", pcallStatus);
         return;
     }
-
-    LOG_INFO("Lua code executed successfully!");
 }
 
 void run_lua_file(void* luaState, const char* filePath) {
@@ -37,6 +35,7 @@ void run_lua_file(void* luaState, const char* filePath) {
     FILE* file = fopen(filePath, "r");
     if (!file) {
         LOG_ERROR("Failed to open Lua file: {}", filePath);
+        LOG_ERROR("> Reason: {}", strerror(errno));
         return;
     }
 
@@ -59,5 +58,4 @@ void inject_lua(void* luaState) {
     injected = true;
 
     LOG_INFO("Injecting Crimsonite into the Lua environment!");
-    run_lua(luaState, "print('Hello from Crimsonite!')");
 }
