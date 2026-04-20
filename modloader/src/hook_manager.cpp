@@ -26,8 +26,13 @@ void load_all_mods(void* luaState) {
 
         SetCurrentDirectoryA(mod.c_str());
 
-        run_lua_file(luaState, modLua.c_str());
-        run_lua_file(luaState, initLua.c_str());
+        try {
+            run_lua_file(luaState, modLua.c_str());
+            run_lua_file(luaState, initLua.c_str());
+        } catch (const std::exception& e) {
+            LOG_ERROR("Error occurred while loading mod: {}", e.what());
+        }
+
 
         SetCurrentDirectoryA(originalDir);
     }
@@ -44,6 +49,7 @@ int __cdecl hooked_loadbuffer(void* luaState, const char* buff, size_t size, con
     inHook = true;
 
     LOG_DEBUG(">>> {}", name ? name : "null");
+    LOG_DEBUG(">>>      Buffer: {}, Size: {}", buff ? buff : "null", size);
 
     int result = g_originalLoadbuffer(luaState, buff, size, name);
 

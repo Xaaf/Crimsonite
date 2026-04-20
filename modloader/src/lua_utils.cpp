@@ -7,24 +7,24 @@
 void run_lua(void* luaState, const char* code) {
     if (!g_originalLoadbuffer) {
         LOG_ERROR("luaL_loadbuffer function pointer is null!");
-        return;
+        throw std::runtime_error("luaL_loadbuffer function pointer is null");
     }
 
     if (!g_originalPcall) {
         LOG_ERROR("lua_pcall function pointer is null!");
-        return;
+        throw std::runtime_error("lua_pcall function pointer is null");
     }
 
     int loadStatus = g_originalLoadbuffer(luaState, code, strlen(code), "crimsonite_injected_chunk");
     if (loadStatus != 0) {
         LOG_ERROR("Failed to load Lua code. Status: {}", loadStatus);
-        return;
+        throw std::runtime_error("Failed to load Lua code");
     }
 
     int pcallStatus = g_originalPcall(luaState, 0, 0, 0);
     if (pcallStatus != 0) {
         LOG_ERROR("Failed to execute Lua code. Status: {}", pcallStatus);
-        return;
+        throw std::runtime_error("Failed to execute Lua code");
     }
 }
 
@@ -36,7 +36,7 @@ void run_lua_file(void* luaState, const char* filePath) {
     if (!file) {
         LOG_ERROR("Failed to open Lua file: {}", filePath);
         LOG_ERROR("> Reason: {}", strerror(errno));
-        return;
+        throw std::runtime_error("Failed to open Lua file");
     }
 
     fseek(file, 0, SEEK_END);
@@ -47,7 +47,17 @@ void run_lua_file(void* luaState, const char* filePath) {
     fread(buffer.data(), 1, fileSize, file);
     fclose(file);
 
-    run_lua(luaState, buffer.c_str());
+    if (buffer.empty()) {
+        LOG_ERROR("Lua file is empty: {}", filePath);
+        throw std::runtime_error("Lua file is empty");
+    }
+
+    try {
+        run_lua(luaState, buffer.c_str());
+    } catch (const std::exception& e) {
+        LOG_ERROR("Error occurred while running Lua file: {}", e.what());
+        throw;
+    }
 }
 
 void inject_lua(void* luaState) {
