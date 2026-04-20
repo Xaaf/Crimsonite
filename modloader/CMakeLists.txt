@@ -12,12 +12,13 @@ target_link_libraries(game_modloader PRIVATE
 )
 
 target_compile_definitions(game_modloader PRIVATE
-    CURRENT_LOG_LEVEL=LOG_LEVEL_DEBUG
+    CURRENT_LOG_LEVEL=LOG_LEVEL_TRACE
 )
 
 target_include_directories(game_modloader PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 
+    ../external/lua/include # Lua headers
     external/minhook/include # MinHook lib
 )
 

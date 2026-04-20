@@ -7,33 +7,68 @@
 
 #include <windows.h>
 
+extern "C" {
+    #include "lua.h"
+    #include "lualib.h"
+    #include "lauxlib.h"
+}
+
+/**
+ * Lua state for the modloader. This allows us to "sandbox" the mods to some extent, as they'll run
+ * on their own Lua state instead of the game's main one. This also helps us prevent crashes, and gives
+ * us more fine-grained control over how mods are loaded, what they can access, etc. This will also allow
+ * for more control for modders in a user-friendly way!
+ */
+lua_State* g_modState = nullptr;
+
 luaL_loadbuffer_t g_originalLoadbuffer = nullptr;
 lua_pcall_t g_originalPcall = nullptr;
 
-// TODO: Find a better way of handling the loading of mods. On occasion, this still likes to crash
-//          the game for whatever reason. Sometimes the mod doesn't load at all, sometimes it's skipped.
 void load_all_mods(void* luaState) {
     std::string folder = "mods";
     auto modFiles = list_mod_folders(folder);
+
+    g_modState = luaL_newstate();
+    if (!g_modState) {
+        LOG_ERROR("Failed to create new Lua state for mods! Mods will not be loaded.");
+        return;
+    }
+    luaL_openlibs(g_modState);
+
+    // TODO: Extract this to a helper function
+    lua_pushcfunction(g_modState, [](lua_State* L) -> int {
+        const char* msg = lua_tostring(L, 1);
+        if (msg) {
+            LOG_INFO("[Mod]: {}", msg);
+        }
+        return 0;
+    });
+    lua_setglobal(g_modState, "log");
+
     for (const auto& mod : modFiles) {
         std::string modLua = mod + "\\mod.lua";
         std::string initLua = mod + "\\init.lua";
 
         LOG_TRACE("=== Loading Mod: {} ===", mod);
     
+        // Change the current directory, to allow for relative pathing in the mod
         char originalDir[MAX_PATH];
         GetCurrentDirectoryA(MAX_PATH, originalDir);
-
         SetCurrentDirectoryA(mod.c_str());
 
-        try {
-            run_lua_file(luaState, modLua.c_str());
-            run_lua_file(luaState, initLua.c_str());
-        } catch (const std::exception& e) {
-            LOG_ERROR("Error occurred while loading mod: {}", e.what());
+        if (luaL_loadfile(g_modState, initLua.c_str()) == 0) {
+            if (lua_pcall(g_modState, 0, 0, 0) != 0) {
+                const char* error = lua_tostring(g_modState, -1);
+                LOG_ERROR("Error running init.lua for mod {}: {}", mod, error ? error : "Unknown error");
+                lua_pop(g_modState, 1);
+            }
+        } else {
+            const char* error = lua_tostring(g_modState, -1);
+            LOG_ERROR("Error loading init.lua for mod {}: {}", mod, error ? error : "Unknown error");
+            lua_pop(g_modState, 1);
         }
 
-
+        // Reset the current directory to prevent issues with the next mod
         SetCurrentDirectoryA(originalDir);
     }
 
@@ -53,16 +88,10 @@ int __cdecl hooked_loadbuffer(void* luaState, const char* buff, size_t size, con
 
     int result = g_originalLoadbuffer(luaState, buff, size, name);
 
-    // Only load mods after `main.lu` to prevent the game from crashing
-    if (name && strcmp(name, "main.lu") == 0) {
-        shouldLoadMods = true;
-    }
-
-    if (shouldLoadMods && !modsLoaded) {
-        modsLoaded = true;
-        shouldLoadMods = false;
-
+    static bool modsLoaded = false;
+    if (!modsLoaded) {
         load_all_mods(luaState);
+        modsLoaded = true;
     }
 
     inHook = false;
@@ -124,4 +153,9 @@ bool initialise_hook_manager() {
 void shutdown_hook_manager() {
     MH_DisableHook(MH_ALL_HOOKS);
     MH_Uninitialize();
+
+    if (g_modState) {
+        lua_close(g_modState);
+        g_modState = nullptr;
+    }
 }
