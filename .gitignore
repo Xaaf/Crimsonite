@@ -1,0 +1,11 @@
+build/
+out/
+.vs/
+*.user
+*.vcxproj
+*.sln
+*/**.exe
+*/**.dll
+*/**.pdb
+*/**.obj
+*/**.log
